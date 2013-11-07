@@ -1,0 +1,60 @@
+<project name="Credit" default="deploy">
+	
+	<target name="compile">
+		<javac srcdir="src" destdir="classes" includeAntRuntime="no">
+			<classpath>
+				<pathelement location="/opt/tomcat/lib/servlet-api.jar"/>
+				<pathelement location="classes"/>
+			</classpath>
+		</javac>
+		<echo message="src is compiled"/>
+	</target>
+	
+	<target name="test_compile" depends="compile">
+		<echo message="TODO: compile tests"/>
+		<javac srcdir="test_src" destdir="test_classes" includeAntRuntime="no">
+			<classpath>
+				<pathelement location="classes"/>
+				<pathelement location="/usr/share/java/junit4.jar"/>
+			</classpath>
+		</javac>
+		<echo message="test_src is compiled"/>
+	</target>
+
+	
+	<target name="test" depends="test_compile">
+		<echo message="Clearing tables"/>	 
+		<sql driver="com.mysql.jdbc.Driver" userid="root" password="webPro" 
+			 classpath="/opt/tomcat/lib/mysql-connector-java-5.1.22-bin.jar" 
+			 url="jdbc:mysql://localhost/csci4300">
+			                 truncate table Purchase;
+			                 truncate table Customer;
+			  </sql>
+		<echo message="Tables are clear"/>
+		<echo message="Running Tests"/>
+		<junit haltonfailure="on">
+			<classpath>
+				<pathelement location="test_classes"/>
+				<pathelement location="classes"/>
+				<pathelement location="/opt/tomcat/lib/mysql-connector-java-5.1.22-bin.jar"/>
+				<pathelement location="/usr/share/java/junit4.jar"/>
+			</classpath>
+			<formatter type="plain" usefile="false"/>
+			<test name="creditcard.CustomerAccountTest"></test>
+			<test name="creditcard.PurchaseTester"></test>
+			<test name="creditcard.CreditDAOTest"></test>
+		</junit>
+		<sql driver="com.mysql.jdbc.Driver" userid="root" password="webPro" 
+			 classpath="/opt/tomcat/lib/mysql-connector-java-5.1.22-bin.jar" 
+			 url="jdbc:mysql://localhost/csci4300">
+				insert into Purchase (merchantName,purchaseDate, custId) values ("Athens",now(),2);
+			</sql>
+		<echo message="Tests complete"/>
+	</target>
+	
+	<target name="deploy" depends="test">
+		<war destfile="Credit.war" basedir="web" webxml="web.xml">
+			<classes dir="classes"/>
+		</war>	 
+	</target>
+</project>
